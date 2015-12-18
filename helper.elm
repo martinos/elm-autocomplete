@@ -6,8 +6,8 @@ import ElmTest exposing (..)
 import Graphics.Element exposing (..)
 
 
-change: Int -> (a -> a) -> Array a -> Array a
-change index f array =
+changeAt: Int -> (a -> a) -> Array a -> Array a
+changeAt index f array =
   case get index array of
     Just elem -> 
       set index (f elem) array
@@ -16,11 +16,11 @@ change index f array =
 tests = 
   let orig = fromList [1,2] 
   in 
-    suite "change" 
-      [ test "change a non existing an element does not change anything" 
-          (assertEqual (orig |> change 10 (always 100)) (fromList [1,2]))
-      , test "change an existing value"
-          (assertEqual (orig |> change 0 (always 100)) (fromList [100,2])) ]
+    suite "changeAt" 
+      [ test "changeAt a non existing an element does not change anything" 
+          (assertEqual (orig |> changeAt 10 (always 100)) (fromList [1,2]))
+      , test "changeAt an existing value"
+          (assertEqual (orig |> changeAt 0 (always 100)) (fromList [100,2])) ]
 
 main = elementRunner tests
 

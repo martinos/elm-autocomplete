@@ -3,18 +3,18 @@ import Html.Attributes exposing(..)
 import Html.Events exposing(..)
 import Debug
 import Regex
+import Selector
+import Json.Decode exposing (customDecoder)
 
 -- example of drop downs http://www.programmableweb.com/category/all/apis?keyword=units%20measurement
 
 type alias Model = { input: String, matches: List Selection, names: List String, key: Int }
-
-type State = Selected | None
-type alias Selection = {text: String, state: State}
+type alias Selection = {text: String, selected: Bool}
 
 initModel: Model
-initModel = { input = "Content", matches = [], names = toMatch, key = 0 }
+initModel = { input = "", matches = [], names = toMatch, key = 0 }
 
-toMatch = [ "Martin", "Genevieve", "joe" ]
+toMatch = [ "Martin", "Mario", "Genevieve", "joe" ]
 
 view: Signal.Address Action -> Model -> Html
 view address model =
@@ -22,9 +22,8 @@ view address model =
       [ input [ type' "text"
               , onInput address UpdateInput
               , value model.input
-              , onKeyDown address KeyPress ]
+              , onArrow address]
               []
-      , text model.input
       , matchesElem model.matches ]
       
 matchesElem matches =
@@ -33,33 +32,56 @@ matchesElem matches =
           ( List.map match matches ) ]
           
 match res =
-  li [] [text res.text]
+  let
+    elem = if res.selected then
+      strong [] [text res.text]
+    else
+      text res.text
+  in
+    li [] [elem]
 
 type Action
   = NoOp
   | UpdateInput String
-  | KeyPress Int
+  | Up
+  | Down
 
 update: Action -> Model -> Model
 update action model =
-  case action of
-  NoOp -> model
-  UpdateInput text ->
-    let regex = Regex.regex text |> Regex.caseInsensitive
-    in
-      { model | input = text
-              , matches = ( model.names |> 
-                            List.filter (Regex.contains regex) 
-                            |> List.map (\n -> Selection n None)) }
--- 40 down, 38 up 
-  KeyPress mykey -> 
-    { model | key = mykey} |> Debug.log "Key pressed"
+  let 
+    updateMatches f model =
+      { model | matches = model.matches |> f }
+  in
+    case action of
+    NoOp -> model
+    UpdateInput text ->
+      let regex = Regex.regex text |> Regex.caseInsensitive
+      in
+        { model | input = text
+                , matches = ( model.names 
+                              |> List.filter (Regex.contains regex) 
+                              |> List.map (\n -> Selection n False)) }
+    Down -> model |> updateMatches (Selector.update Selector.Next) 
+    Up-> model |> updateMatches (Selector.update Selector.Prev)
 
+onArrow addr =
+  onWithOptions "keydown" {preventDefault = True, stopPropagation = False}
+  (customDecoder keyCode isArrow)
+  (\k ->
+      Signal.message addr <|
+      case k of
+        38 -> Up
+        40 -> Down 
+        _ -> NoOp)
+isArrow =
+  (\k ->
+    if k == 40 || k == 38
+    then Ok k
+    else Err "not arrow")
 app = Signal.mailbox NoOp
 
 -- main = view (initModel |> update NoOp)
 main = app.signal |> Signal.foldp update initModel |> Signal.map (view app.address)
-
 
 onInput : Signal.Address a -> (String -> a) -> Attribute
 onInput address f =

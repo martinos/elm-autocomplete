@@ -1,60 +1,58 @@
-import Html exposing (..)
-import Html.Attributes exposing (..) 
-import Debug exposing (..)
+module Selector where
 import ElmTest exposing (..)
-import Helper exposing (change)
+import Helper exposing (changeAt)
 import Array exposing (..)
 
 type Action
   = Prev
   | Next
+  | NoOp
 
-find: (a -> Bool) -> List a -> Maybe a
-find cond list =
-  case list of
-    [] -> Nothing
-    (x::xs) -> if cond x 
-               then Just x
-               else find cond xs
-
-withIndex =
-  Array.indexedMap (,) 
-
-updateWithIds: Action -> Array (Selectable a)-> Array (Selectable a)
-updateWithIds action items =
-  let 
-    current = items |> withIndex |> Array.filter (snd >> .selected) |> Array.get 0
-    size = Array.length items 
-  in
-    case action of
-      Prev -> 
-        case current of 
-          Nothing -> 
-            items |> change (size - 1) select 
-          Just (index, item) -> 
-            let
-              nextElem = items |> Array.get (index - 1)
-            in
-              case nextElem of
-                Nothing -> items
-                Just a ->
-                  items |> resetSelections |> change (index - 1) select 
-      Next -> 
-        case current of 
-          Nothing -> 
-            items |> change 0 select 
-          Just (index, item) -> 
-            let
-              nextElem = items |> Array.get (index + 1)
-            in
-              case nextElem of
-                Nothing -> items
-                Just a ->
-                  items |> resetSelections |> change (index + 1) select 
+type alias Selectable a =
+    { a | selected : Bool}
 
 update: Action -> List (Selectable a) -> List (Selectable a) 
 update action list =
-  list |> fromList |> updateWithIds action |> toList
+  list |> fromList |> updateWithIds action 
+    |> Debug.log "list" |> toList
+
+updateWithIds: Action -> Array (Selectable a) -> Array (Selectable a)
+updateWithIds action items =
+  let 
+    index = selectedItemIndex items    
+    size = Array.length items
+  in
+    case action of
+      Prev -> 
+        items |> navigate prev (size - 1) index
+      Next -> 
+        items |> navigate next 0 index
+      NoOp -> 
+        items
+
+selectedItemIndex items = 
+  items |> withIndex 
+        |> Array.filter (snd >> .selected) 
+        |> Array.get 0 
+        |> (flip Maybe.andThen) (fst >> Just)
+
+next x = x + 1
+prev x = x - 1 
+
+navigate: (Int -> Int) ->  Int -> Maybe Int -> Array (Selectable a) -> Array (Selectable a)
+navigate step start_id index items = 
+  case index of 
+    Nothing -> 
+      items |> changeAt start_id select
+    Just index -> 
+      let
+        nextElem = items |> Array.get (step index)
+      in
+        case nextElem of
+          Nothing -> 
+            items 
+          Just a ->
+            items |> resetSelections |> changeAt (step index) select
 
 resetSelections  =
   Array.map unselect 
@@ -68,23 +66,7 @@ select elem =
 toggle elem =
   { elem | selected =  not elem.selected}
 
-type alias Selectable a =
-    { a | selected : Bool}
 
--- Test
+withIndex =
+  Array.indexedMap (,) 
 
-testList = [ { name = "Martin", selected = True }
-           , { name = "Joe", selected = False} ]
-
-tests = 
-  suite "update"
-    [ suite "Next"
-        [ test "it selects the next element" ( assert ( update Next testList 
-                                                        |> List.member { name = "Joe"
-                                                                       , selected = True}))
-        , test "it deselect the old element" ( assert ( update Next testList 
-                                                     |> List.member { name = "Martin"
-                                                                    , selected = False}))]]
-
--- main = renderList list
-main = elementRunner tests
