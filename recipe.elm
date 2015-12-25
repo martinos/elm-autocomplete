@@ -28,8 +28,7 @@ view address model =
       
 matchesElem matches =
   ul []
-     [ li []
-          ( List.map match matches ) ]
+     ( List.map match matches )
           
 match res =
   let

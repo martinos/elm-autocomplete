@@ -14,7 +14,7 @@ type alias Selectable a =
 update: Action -> List (Selectable a) -> List (Selectable a) 
 update action list =
   list |> fromList |> updateWithIds action 
-    |> Debug.log "list" |> toList
+       |> Debug.log "list" |> toList
 
 updateWithIds: Action -> Array (Selectable a) -> Array (Selectable a)
 updateWithIds action items =
