@@ -1,1 +1,2 @@
 set makeprg=elm\ make
+set wildignore+=*/elm-stuff/*
