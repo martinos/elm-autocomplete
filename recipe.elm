@@ -1,90 +1,45 @@
 import Html exposing (..)
-import Html.Attributes exposing(..)
-import Html.Events exposing(..)
 import Debug
-import Regex
-import Selector
-import Json.Decode exposing (customDecoder)
+import StartApp.Simple as StartApp
+import SelectionBox
 
 -- example of drop downs http://www.programmableweb.com/category/all/apis?keyword=units%20measurement
+qties = [ "tasse", "cuiller a the", "cuiller a soupe" ]
+ingredients = [ "farine", "sel", "piments", "bleuet" ]
 
-type alias Model = { input: String, matches: List Selection, names: List String, key: Int }
-type alias Selection = {text: String, selected: Bool}
+type alias Model = { unit: SelectionBox.Model, ingredients: SelectionBox.Model }
 
-initModel: Model
-initModel = { input = "", matches = [], names = toMatch, key = 0 }
+model: Model
+model = { unit = { input = ""
+                  , matches = []
+                  , names = qties
+                  , submitted = False }
+        , ingredients = { input = ""
+                        , matches = []
+                        , names = ingredients 
+                        , submitted = False}}
 
-toMatch = [ "Martin", "Mario", "Genevieve", "joe" ]
-
-view: Signal.Address Action -> Model -> Html
-view address model =
-  div []
-      [ input [ type' "text"
-              , onInput address UpdateInput
-              , value model.input
-              , onArrow address]
-              []
-      , matchesElem model.matches ]
-      
-matchesElem matches =
-  ul []
-     ( List.map match matches )
-          
-match res =
-  let
-    elem = if res.selected then
-      strong [] [text res.text]
-    else
-      text res.text
-  in
-    li [] [elem]
-
-type Action
-  = NoOp
-  | UpdateInput String
-  | Up
-  | Down
+main =
+    StartApp.start { model = model, view = view, update = update }
 
 update: Action -> Model -> Model
 update action model =
-  let 
-    updateMatches f model =
-      { model | matches = model.matches |> f }
-  in
-    case action of
-    NoOp -> model
-    UpdateInput text ->
-      let regex = Regex.regex text |> Regex.caseInsensitive
-      in
-        { model | input = text
-                , matches = ( model.names 
-                              |> List.filter (Regex.contains regex) 
-                              |> List.map (\n -> Selection n False)) }
-    Down -> model |> updateMatches (Selector.update Selector.Next) 
-    Up-> model |> updateMatches (Selector.update Selector.Prev)
+  case action of
+    NoOp -> 
+      model
+    Unit act ->
+      {model| unit = SelectionBox.update act model.unit} 
+    Ingr act ->
+      {model| ingredients = SelectionBox.update act model.ingredients} 
 
-onArrow addr =
-  onWithOptions "keydown" {preventDefault = True, stopPropagation = False}
-  (customDecoder keyCode isArrow)
-  (\k ->
-      Signal.message addr <|
-      case k of
-        38 -> Up
-        40 -> Down 
-        _ -> NoOp)
-isArrow =
-  (\k ->
-    if k == 40 || k == 38
-    then Ok k
-    else Err "not arrow")
-app = Signal.mailbox NoOp
+type Action
+  = NoOp
+  | Unit SelectionBox.Action
+  | Ingr SelectionBox.Action
 
--- main = view (initModel |> update NoOp)
-main = app.signal |> Signal.foldp update initModel |> Signal.map (view app.address)
+view: Signal.Address Action -> Model -> Html
+view address model =
+  div [] 
+       [ SelectionBox.view (Signal.forwardTo address Unit) model.unit 
+       , SelectionBox.view (Signal.forwardTo address Ingr) model.ingredients ]
 
-onInput : Signal.Address a -> (String -> a) -> Attribute
-onInput address f =
-    on "input" targetValue (\v -> Signal.message address (f v))
-
-onChange address f =
-  on "change" targetValue (\v -> Signal.message address (f v))

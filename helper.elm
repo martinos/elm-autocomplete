@@ -4,7 +4,8 @@ import Array exposing (..)
 import Html exposing (..)
 import ElmTest exposing (..)
 import Graphics.Element exposing (..)
-
+import Json.Decode exposing (customDecoder)
+import Html.Events as Events
 
 changeAt: Int -> (a -> a) -> Array a -> Array a
 changeAt index f array =
@@ -12,6 +13,16 @@ changeAt index f array =
     Just elem -> 
       set index (f elem) array
     Nothing -> array
+
+isArrow k =
+  if k == 40 || k == 38
+  then Ok k
+  else Err "not arrow"
+
+onArrow addr arrowToAction =
+  Events.onWithOptions "keydown" {preventDefault = True, stopPropagation = False}
+                (customDecoder Events.keyCode isArrow)
+                (Signal.message addr << arrowToAction)
 
 tests = 
   let orig = fromList [1,2] 
