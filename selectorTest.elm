@@ -20,8 +20,11 @@ selected name =
 
 onlySelected: String -> List Item -> Bool 
 onlySelected name list =
-  (List.filter .selected list |> List.length) == 
-    (List.filter (\r -> r == {name = name, selected = True}) list |> List.length)
+  (List.filter .selected list |> List.length) == 1 &&  
+    ((List.filter (\r -> r == {name = name, selected = True}) list |> List.length) == 1)
+
+isNoneSelected list =
+  (list |> List.filter .selected |> List.length) == 0
 
 tests = 
   suite "update"
@@ -38,6 +41,11 @@ tests =
         , test "it selects the previous element"
             <| assert (lastSelected |> update Prev |> onlySelected "Martin")
         , test "If first selected it stays selected"
-            <| assert (firstSelected |> update Prev |> onlySelected "Martin")]]
+            <| assert (firstSelected |> update Prev |> onlySelected "Martin")]
+    , suite "Select"
+        [ test "selects the first element if id = 0"
+          <| assert (noneSelected |> update (Select 0) |> onlySelected "Martin")]
+        , test "selects none if id is out of range"
+          <| assert (noneSelected |> update (Select 1000) |> isNoneSelected)] 
 
 main = elementRunner tests

@@ -3,20 +3,24 @@ import StartApp.Simple as StartApp
 import AutoComplete exposing (..)
 
 -- example of drop downs http://www.programmableweb.com/category/all/apis?keyword=units%20measurement
-qties = [ "tasse", "cuiller a the", "cuiller a soupe" ]
-ingredients = [ "farine", "sel", "piments", "bleuet" ]
+qties = [ "once", "tasse", "cuiller a the", "cuiller a soupe" ]
+ingredients = [ "farine", "sel", "piment", "bleuet", "poivre", "pomme de terre", "pomme verte" ]
 
-type alias Model = { unit: AutoComplete.Model, ingredients: AutoComplete.Model }
+type alias Model = { qty: AutoComplete.Model
+                   , unit: AutoComplete.Model
+                   , ingredients: AutoComplete.Model }
+
+
+defaultAutocomplete = 
+  { input = ""
+  , matches = []
+  , names = [] 
+  , submitted = False }
 
 model: Model
-model = { unit = { input = ""
-                  , matches = []
-                  , names = qties
-                  , submitted = False }
-        , ingredients = { input = ""
-                        , matches = []
-                        , names = ingredients 
-                        , submitted = False}}
+model = { qty  = defaultAutocomplete
+        , unit = { defaultAutocomplete | names = qties }
+        , ingredients = { defaultAutocomplete | names = ingredients }}
 
 main =
     StartApp.start { model = model, view = view, update = update }
@@ -26,6 +30,8 @@ update action model =
   case action of
     NoOp -> 
       model
+    Qty act ->
+      {model| qty = AutoComplete.update act model.qty} 
     Unit act ->
       {model| unit = AutoComplete.update act model.unit} 
     Ingr act ->
@@ -33,12 +39,14 @@ update action model =
 
 type Action
   = NoOp
+  | Qty AutoComplete.Action
   | Unit AutoComplete.Action
   | Ingr AutoComplete.Action
 
 view: Signal.Address Action -> Model -> Html
 view address model =
   div [] 
-       [ AutoComplete.view (Signal.forwardTo address Unit) model.unit 
+       [ AutoComplete.view (Signal.forwardTo address Qty) model.qty 
+       , AutoComplete.view (Signal.forwardTo address Unit) model.unit 
        , AutoComplete.view (Signal.forwardTo address Ingr) model.ingredients ]
 

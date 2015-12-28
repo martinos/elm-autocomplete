@@ -6,6 +6,7 @@ import Array exposing (..)
 type Action
   = Prev
   | Next
+  | Select Int 
   | NoOp
 
 type alias Selectable a =
@@ -14,7 +15,7 @@ type alias Selectable a =
 update: Action -> List (Selectable a) -> List (Selectable a) 
 update action list =
   list |> fromList |> updateWithIds action 
-       |> Debug.log "list" |> toList
+       |> toList
 
 updateWithIds: Action -> Array (Selectable a) -> Array (Selectable a)
 updateWithIds action items =
@@ -27,6 +28,8 @@ updateWithIds action items =
         items |> navigate prev (size - 1) index
       Next -> 
         items |> navigate next 0 index
+      Select id ->
+        items |> setSelection id 
       NoOp -> 
         items
 
@@ -45,14 +48,18 @@ navigate step start_id index items =
     Nothing -> 
       items |> changeAt start_id select
     Just index -> 
-      let
-        nextElem = items |> Array.get (step index)
-      in
-        case nextElem of
-          Nothing -> 
-            items 
-          Just a ->
-            items |> resetSelections |> changeAt (step index) select
+      setSelection (step index) items
+
+setSelection: Int -> Array (Selectable a) -> Array (Selectable a)
+setSelection index items =
+  let 
+    selection = items |> Array.get index
+  in
+    case selection of
+      Nothing -> 
+        items 
+      Just a ->
+        items |> resetSelections |> changeAt index select
 
 resetSelections  =
   Array.map unselect 
@@ -65,7 +72,6 @@ select elem =
 
 toggle elem =
   { elem | selected =  not elem.selected}
-
 
 withIndex =
   Array.indexedMap (,) 

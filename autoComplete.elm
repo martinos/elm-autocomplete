@@ -14,13 +14,6 @@ type alias Model = { input: String
 
 type alias Selection = {text: String, selected: Bool}
 
-initModel: Model
-initModel = { input = ""
-            , matches = []
-            , names = toMatch
-            , submitted = False }
-
-toMatch = [ "tasse", "cuiller a the", "cuiller a soupe" ]
 
 view: Signal.Address Action -> Model -> Html
 view address model =
@@ -38,25 +31,36 @@ editElem address model =
               , value model.input
               , onArrow address arrowToAction]
               []
-      , matchesElem model.matches ]
+      , matchesElem address model.matches ]
 
 showElem: Model -> Html
 showElem model =
   div [style [("float", "left")]]
       [text model.input]
 
-matchesElem matches =
+matchesElem address matches =
   ul []
-     ( List.map match matches )
-          
-match res =
+     ( List.indexedMap (match address) matches )
+
+selectedStyles =
+  [ ("background-color", "blue")
+  , ("color", "white")
+  , ("list-style-type", "none")] 
+
+selectionStyle =
+  [("list-style-type", "none")]
+
+match: Signal.Address Action -> Int -> Selection -> Html 
+match address id res =
   let
-    elem = if res.selected then
-      strong [] [text res.text]
+    style' = if res.selected then
+      selectedStyles ++ selectionStyle
     else
-      text res.text
+      selectionStyle 
   in
-    li [] [elem]
+    li [ style style' 
+       , onMouseOver address (Select id) ] 
+       [ text res.text ]
 
 -- Update
 
@@ -66,6 +70,7 @@ type Action
   | SubmitInput String
   | Up
   | Down
+  | Select Int
 
 update: Action -> Model -> Model
 update action model =
@@ -86,15 +91,20 @@ update action model =
           , matches = ( model.names 
                         |> List.filter (Regex.contains regex) 
                         |> List.map (\n -> Selection n False)) }
+          |> updateMatches (Selector.update (Selector.Select 0))
     SubmitInput text ->
       let 
-          selected = model.matches |> List.filter .selected |> List.head
+        selected = model.matches |> List.filter .selected |> List.head
       in
         case selected of
-          Nothing -> model
+          Nothing -> {model | submitted = True }
           Just elem -> {model | input = elem.text, submitted = True}
-    Down -> model |> updateMatches (Selector.update Selector.Next) 
-    Up-> model |> updateMatches (Selector.update Selector.Prev)
+    Down -> 
+      model |> updateMatches (Selector.update Selector.Next) 
+    Up -> 
+      model |> updateMatches (Selector.update Selector.Prev)
+    Select id ->
+      model |> updateMatches (Selector.update (Selector.Select id))
 
 arrowToAction k = 
   case k of
@@ -102,15 +112,24 @@ arrowToAction k =
   40 -> Down 
   _ -> NoOp
 
-app = Signal.mailbox NoOp
-
-main = app.signal 
-        |> Signal.foldp update initModel 
-        |> Signal.map (view app.address)
-
 onInput : Signal.Address a -> (String -> a) -> Attribute
 onInput address f =
   on "input" targetValue (\v -> Signal.message address (f v))
 
 onChange address f =
   on "change" targetValue (\v -> Signal.message address (f v))
+app = Signal.mailbox NoOp
+
+-- Test app
+
+initModel: Model
+initModel = { input = ""
+            , matches = []
+            , names = toMatch
+            , submitted = False }
+
+toMatch = [ "ml", "once",  "tasse", "cuiller a the", "cuiller a soupe" ]
+main = app.signal 
+        |> Signal.foldp update initModel 
+        |> Signal.map (view app.address)
+
