@@ -1,52 +1,87 @@
+module Main (..) where
+
 import Html exposing (..)
 import StartApp.Simple as StartApp
 import AutoComplete exposing (..)
+import Helper
+import Maybe
+
 
 -- example of drop downs http://www.programmableweb.com/category/all/apis?keyword=units%20measurement
-qties = [ "once", "tasse", "cuiller a the", "cuiller a soupe" ]
-ingredients = [ "farine", "sel", "piment", "bleuet", "poivre", "pomme de terre", "pomme verte" ]
-
-type alias Model = { qty: AutoComplete.Model
-                   , unit: AutoComplete.Model
-                   , ingredients: AutoComplete.Model }
 
 
-defaultAutocomplete = 
+qties =
+  [ "oz"
+  , "cup"
+  , "tea spoon"
+  , "table spoon"
+  ]
+
+
+ingredients =
+  [ "flour"
+  , "salt"
+  , "pepper"
+  , "blue berry"
+  , "potato"
+  , "apple"
+  ]
+
+
+type alias Model =
+  List AutoComplete.Model
+
+
+defaultAutocomplete =
   { input = ""
   , matches = []
-  , names = [] 
-  , submitted = False }
+  , names = []
+  , submitted = False
+  }
 
-model: Model
-model = { qty  = defaultAutocomplete
-        , unit = { defaultAutocomplete | names = qties }
-        , ingredients = { defaultAutocomplete | names = ingredients }}
+
+model : Model
+model =
+  [ defaultAutocomplete
+  , { defaultAutocomplete | names = qties }
+  , { defaultAutocomplete | names = ingredients }
+  ]
+
 
 main =
-    StartApp.start { model = model, view = view, update = update }
+  StartApp.start { model = model, view = view, update = update }
 
-update: Action -> Model -> Model
+
+update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp -> 
+    NoOp ->
       model
-    Qty act ->
-      {model| qty = AutoComplete.update act model.qty} 
-    Unit act ->
-      {model| unit = AutoComplete.update act model.unit} 
-    Ingr act ->
-      {model| ingredients = AutoComplete.update act model.ingredients} 
+
+    Update id actiono ->
+      model
+        |> List.indexedMap
+            (\i x ->
+              if i == id then
+                AutoComplete.update actiono x
+              else
+                x
+            )
+
 
 type Action
   = NoOp
-  | Qty AutoComplete.Action
-  | Unit AutoComplete.Action
-  | Ingr AutoComplete.Action
+  | Update Int AutoComplete.Action
 
-view: Signal.Address Action -> Model -> Html
+
+view : Signal.Address Action -> Model -> Html
 view address model =
-  div [] 
-       [ AutoComplete.view (Signal.forwardTo address Qty) model.qty 
-       , AutoComplete.view (Signal.forwardTo address Unit) model.unit 
-       , AutoComplete.view (Signal.forwardTo address Ingr) model.ingredients ]
+  let
+    widgetAddr id = Signal.forwardTo address (Update id)
+
+    widgetElem id wid = AutoComplete.view (widgetAddr id) wid
+  in
+    div
+      []
+      (List.indexedMap widgetElem model)
 
