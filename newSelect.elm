@@ -1,21 +1,8 @@
-module Main (..) where
+module NewSelect (..) where
 
 import Html exposing (..)
 import Graphics.Element exposing (..)
 import String
-
-
-main =
-  show (emptyGroup |> trans)
-
-
-trans =
-  add "Martin"
-    >> add "Gen"
-    >> add "Marto"
-    >> changeAt String.toUpper 0
-    >> changeAt String.toUpper 2
-    >> deleteAt 1
 
 
 type alias ID =
