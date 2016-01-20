@@ -28,7 +28,7 @@ add a (Group list id) =
 
 
 changeAt : (a -> a) -> ID -> Group a -> Group a
-changeAt f toChange (Group list id) =
+changeAt f toChange (Group list nextID) =
   let
     changeIf ( i, item ) =
       if i == toChange then
@@ -36,15 +36,21 @@ changeAt f toChange (Group list id) =
       else
         ( i, item )
   in
-    Group (List.map changeIf list) id
+    Group (List.map changeIf list) nextID 
 
 
 deleteAt : ID -> Group a -> Group a
-deleteAt a (Group list id) =
-  Group (List.filter ((/=) a << fst) list) id
+deleteAt a (Group list nextID) =
+  Group (List.filter ((/=) a << fst) list) nextID
 
 
 indexedMap : (ID -> a -> a) -> Group a -> Group a
 indexedMap f g =
   g
+
+
+map : (List (ID, a) -> List (ID, b)) -> Group a -> Group b
+map f (Group list nextID) =
+  Group (f list) nextID
+
 

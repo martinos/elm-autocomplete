@@ -16,6 +16,7 @@ qties =
   , "cup"
   , "tea spoon"
   , "table spoon"
+  , "unit"
   ]
 
 
@@ -24,6 +25,7 @@ ingredients =
   , "salt"
   , "pepper"
   , "blue berry"
+  , "banana"
   , "potato"
   , "apple"
   ]
@@ -44,7 +46,7 @@ defaultAutocomplete =
 model : Model
 model =
   [ defaultAutocomplete
-  , { defaultAutocomplete | names = qties }
+  , { defaultAutocomplete | names = qties}
   , { defaultAutocomplete | names = ingredients }
   ]
 
@@ -59,12 +61,12 @@ update action model =
     NoOp ->
       model
 
-    Update id actiono ->
+    Update id action ->
       model
         |> List.indexedMap
             (\i x ->
               if i == id then
-                AutoComplete.update actiono x
+                AutoComplete.update action x
               else
                 x
             )
@@ -81,14 +83,12 @@ view address model =
     widgetAddr id = Signal.forwardTo address (Update id)
 
     widgetElem id wid =
-      table
-        [ style [ ( "float", "left" ) ] ]
-        [ tr
-            []
-            [ td [] [ AutoComplete.view (widgetAddr id) wid ] ]
-        ]
+      td [] [ AutoComplete.view (widgetAddr id) wid ]
   in
     div
       []
-      (List.indexedMap widgetElem model)
+      [ table
+          []
+          [ tr [] (List.indexedMap widgetElem model) ]
+      ]
 
