@@ -1,6 +1,7 @@
 module Main (..) where
 
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import StartApp.Simple as StartApp
 import AutoComplete exposing (..)
 import Helper
@@ -79,7 +80,13 @@ view address model =
   let
     widgetAddr id = Signal.forwardTo address (Update id)
 
-    widgetElem id wid = AutoComplete.view (widgetAddr id) wid
+    widgetElem id wid =
+      table
+        [ style [ ( "float", "left" ) ] ]
+        [ tr
+            []
+            [ td [] [ AutoComplete.view (widgetAddr id) wid ] ]
+        ]
   in
     div
       []

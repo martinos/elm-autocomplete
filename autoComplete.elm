@@ -24,15 +24,15 @@ type alias Selection =
 view : Signal.Address Action -> Model -> Html
 view address model =
   if model.submitted then
-    showElem model
+    showHtml model
   else
-    editElem address model
+    editHtml address model
 
 
-editElem : Signal.Address Action -> Model -> Html
-editElem address model =
+editHtml : Signal.Address Action -> Model -> Html
+editHtml address model =
   div
-    [ style [ ( "float", "left" ) ] ]
+    []
     [ input
         [ type' "text"
         , onInput address UpdateInput
@@ -41,20 +41,20 @@ editElem address model =
         , onArrow address arrowToAction
         ]
         []
-    , matchesElem address model.matches
+    , matchesHtml address model.matches
     ]
 
 
-showElem : Model -> Html
-showElem model =
+showHtml : Model -> Html
+showHtml model =
   div
     [ style [ ( "float", "left" ) ] ]
     [ text model.input ]
 
 
-matchesElem address matches =
+matchesHtml address matches =
   ul
-    []
+    [style [("margin","0px"), ("padding", "0px")]]
     (List.indexedMap (match address) matches)
 
 
