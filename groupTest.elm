@@ -1,6 +1,6 @@
 module Main (..) where
 
-import NewSelect exposing (..)
+import Group exposing (..)
 import ElmTest exposing (..)
 
 

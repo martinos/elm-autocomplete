@@ -1,4 +1,4 @@
-module NewSelect (..) where
+module Group (..) where
 
 import Html exposing (..)
 import Graphics.Element exposing (..)
