@@ -4,21 +4,26 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Regex
-import Selector
+import Group exposing (..)
+import NewSelector as Selector exposing (..)
 import Helper exposing (..)
 import String exposing (isEmpty)
 
 
 type alias Model =
   { input : String
-  , matches : List Selection
+  , matches : Selector String
   , names : List String
   , submitted : Bool
   }
 
 
-type alias Selection =
-  { text : String, selected : Bool }
+defaultAutocomplete =
+  { input = ""
+  , matches = emptySelector
+  , names = []
+  , submitted = False
+  }
 
 
 view : Signal.Address Action -> Model -> Html
@@ -52,10 +57,18 @@ showHtml model =
     [ text model.input ]
 
 
+matchesHtml : Signal.Address Action -> Selector String -> Html
 matchesHtml address matches =
   ul
-    [style [("margin","0px"), ("padding", "0px")]]
-    (List.indexedMap (match address) matches)
+    [ style
+        [ ( "margin", "0px" )
+        , ( "padding", "0px" )
+        ]
+    ]
+    (Group.indexedMap
+      (matchHtml address (cursor matches))
+      (group matches)
+    )
 
 
 selectedStyles =
@@ -69,11 +82,11 @@ selectionStyle =
   [ ( "list-style-type", "none" ) ]
 
 
-match : Signal.Address Action -> Int -> Selection -> Html
-match address id res =
+matchHtml : Signal.Address Action -> Maybe ID -> ID -> String -> Html
+matchHtml address selection id res =
   let
     style' =
-      if res.selected then
+      if selection == Just id then
         selectedStyles ++ selectionStyle
       else
         selectionStyle
@@ -82,7 +95,7 @@ match address id res =
       [ style style'
       , onMouseOver address (Select id)
       ]
-      [ text res.text ]
+      [ text res ]
 
 
 
@@ -113,40 +126,33 @@ update action model =
           regex = text |> Regex.escape |> Regex.regex |> Regex.caseInsensitive
         in
           if String.isEmpty text then
-            { model
-              | input = text
-              , matches = []
-            }
+            { model | input = text, matches = emptySelector }
           else
             { model
               | input = text
               , matches =
-                  (model.names
-                    |> List.filter (Regex.contains regex)
-                    |> List.map (\n -> Selection n False)
-                  )
+                  Selector Nothing (List.foldl add emptyGroup model.names) |> next
             }
-              |> updateMatches (Selector.update (Selector.Select 0))
 
       SubmitInput text ->
         let
-          selected = model.matches |> List.filter .selected |> List.head
+          selected = selection model.matches
         in
           case selected of
             Nothing ->
               { model | submitted = True }
 
             Just elem ->
-              { model | input = elem.text, submitted = True }
+              { model | input = elem, submitted = True }
 
       Down ->
-        model |> updateMatches (Selector.update Selector.Next)
+        model |> updateMatches next
 
       Up ->
-        model |> updateMatches (Selector.update Selector.Prev)
+        model |> updateMatches prev
 
       Select id ->
-        model |> updateMatches (Selector.update (Selector.Select id))
+        model
 
 
 arrowToAction k =
@@ -181,7 +187,7 @@ app =
 initModel : Model
 initModel =
   { input = ""
-  , matches = []
+  , matches = emptySelector
   , names = toMatch
   , submitted = False
   }

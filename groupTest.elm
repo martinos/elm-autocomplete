@@ -47,10 +47,9 @@ tests =
     , suite
         "toListWithID"
         [ test "should return a list with ids"
-            <| assertEqual ([(0, "one")]) (emptyGroup |> add "one" |> listWithId)
+            <| assertEqual ([ ( 0, "one" ) ]) (emptyGroup |> add "one" |> listWithId)
         ]
     ]
-
 
 main =
   elementRunner tests

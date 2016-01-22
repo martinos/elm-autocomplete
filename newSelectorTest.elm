@@ -1,5 +1,5 @@
-import Selector exposing (..)
 import ElmTest exposing (..)
+import NewSelector as Selector exposing (..)
 
 -- Test
 

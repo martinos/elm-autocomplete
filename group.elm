@@ -36,7 +36,7 @@ changeAt f toChange (Group list nextID) =
       else
         ( i, item )
   in
-    Group (List.map changeIf list) nextID 
+    Group (List.map changeIf list) nextID
 
 
 deleteAt : ID -> Group a -> Group a
@@ -44,13 +44,12 @@ deleteAt a (Group list nextID) =
   Group (List.filter ((/=) a << fst) list) nextID
 
 
-indexedMap : (ID -> a -> a) -> Group a -> Group a
-indexedMap f g =
-  g
+indexedMap : (ID -> a -> b) -> Group a -> List b
+indexedMap f (Group list nextID)  =
+  List.map (\(id, elem) -> f id elem) list
 
 
-map : (List (ID, a) -> List (ID, b)) -> Group a -> Group b
+map : (List ( ID, a ) -> List ( ID, b )) -> Group a -> Group b
 map f (Group list nextID) =
   Group (f list) nextID
-
 

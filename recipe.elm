@@ -35,13 +35,6 @@ type alias Model =
   List AutoComplete.Model
 
 
-defaultAutocomplete =
-  { input = ""
-  , matches = []
-  , names = []
-  , submitted = False
-  }
-
 
 model : Model
 model =
