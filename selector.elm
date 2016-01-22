@@ -1,4 +1,4 @@
-module NewSelector (..) where
+module Selector (..) where
 
 import ElmTest exposing (..)
 import Group exposing (..)

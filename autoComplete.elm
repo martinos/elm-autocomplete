@@ -5,7 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Regex
 import Group exposing (..)
-import NewSelector as Selector exposing (..)
+import Selector exposing (..)
 import Helper exposing (..)
 import String exposing (isEmpty)
 
