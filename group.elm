@@ -48,8 +48,3 @@ indexedMap : (ID -> a -> b) -> Group a -> List b
 indexedMap f (Group list nextID)  =
   List.map (\(id, elem) -> f id elem) list
 
-
-map : (List ( ID, a ) -> List ( ID, b )) -> Group a -> Group b
-map f (Group list nextID) =
-  Group (f list) nextID
-

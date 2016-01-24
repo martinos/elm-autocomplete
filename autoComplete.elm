@@ -13,7 +13,7 @@ import String exposing (isEmpty)
 type alias Model =
   { input : String
   , matches : Selector String
-  , names : List String
+  , choices : List String
   , submitted : Bool
   }
 
@@ -21,9 +21,13 @@ type alias Model =
 defaultAutocomplete =
   { input = ""
   , matches = emptySelector
-  , names = []
+  , choices = []
   , submitted = False
   }
+
+
+
+-- View
 
 
 view : Signal.Address Action -> Model -> Html
@@ -121,17 +125,21 @@ update action model =
       NoOp ->
         model
 
-      UpdateInput text ->
-        let
-          regex = text |> Regex.escape |> Regex.regex |> Regex.caseInsensitive
-        in
-          if String.isEmpty text then
-            { model | input = text, matches = emptySelector }
-          else
+      UpdateInput inputStr ->
+        if String.isEmpty inputStr then
+          { model | input = inputStr, matches = emptySelector }
+        else
+          let
+            matcher = inputStr |> Regex.escape |> Regex.regex |> Regex.caseInsensitive
+
+            matches = model.choices |> List.filter (Regex.contains matcher)
+
+            populatedSelector =
+              Selector Nothing (List.foldl add emptyGroup matches)
+          in
             { model
-              | input = text
-              , matches =
-                  Selector Nothing (List.foldl add emptyGroup model.names) |> next
+              | input = inputStr
+              , matches = populatedSelector |> next
             }
 
       SubmitInput text ->
@@ -152,7 +160,7 @@ update action model =
         model |> updateMatches prev
 
       Select id ->
-        model
+        model |> updateMatches (moveAt (Just id))
 
 
 arrowToAction k =
@@ -165,6 +173,10 @@ arrowToAction k =
 
     _ ->
       NoOp
+
+
+
+-- Helpers
 
 
 onInput : Signal.Address a -> (String -> a) -> Attribute
@@ -188,7 +200,7 @@ initModel : Model
 initModel =
   { input = ""
   , matches = emptySelector
-  , names = toMatch
+  , choices = toMatch
   , submitted = False
   }
 

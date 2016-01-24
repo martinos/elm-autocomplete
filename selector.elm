@@ -22,8 +22,8 @@ cursor (Selector id _) =
 group (Selector _ group) =  group
 
 
-move : (List ( ID, a ) -> List ( ID, a )) -> Selector a -> Selector a
-move orientation (Selector pos group) =
+moveRel : (List ( ID, a ) -> List ( ID, a )) -> Selector a -> Selector a
+moveRel orientation (Selector pos group) =
   let
     (Group list id) = group
 
@@ -39,13 +39,17 @@ move orientation (Selector pos group) =
 
 prev : Selector a -> Selector a
 prev =
-  move List.reverse
+  moveRel List.reverse
 
 
 next : Selector a -> Selector a
 next =
-  move identity
+  moveRel identity
 
+
+moveAt: Maybe ID -> Selector a -> Selector a
+moveAt id (Selector _ group) =
+  Selector id group
 
 findNext : Maybe a -> List a -> Maybe a
 findNext cursPos list =

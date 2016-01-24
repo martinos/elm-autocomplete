@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import StartApp.Simple as StartApp
 import AutoComplete exposing (..)
+import Group exposing (..)
 import Helper
 import Maybe
 
@@ -32,16 +33,16 @@ ingredients =
 
 
 type alias Model =
-  List AutoComplete.Model
-
+  Group AutoComplete.Model
 
 
 model : Model
 model =
-  [ defaultAutocomplete
-  , { defaultAutocomplete | names = qties}
-  , { defaultAutocomplete | names = ingredients }
-  ]
+  emptyGroup
+  |> add { defaultAutocomplete | choices = ingredients }
+  |> add { defaultAutocomplete | choices = qties }
+  |> add defaultAutocomplete
+  
 
 
 main =
@@ -55,15 +56,7 @@ update action model =
       model
 
     Update id action ->
-      model
-        |> List.indexedMap
-            (\i x ->
-              if i == id then
-                AutoComplete.update action x
-              else
-                x
-            )
-
+      model |> Group.changeAt (AutoComplete.update action) id
 
 type Action
   = NoOp
@@ -82,6 +75,6 @@ view address model =
       []
       [ table
           []
-          [ tr [] (List.indexedMap widgetElem model) ]
+          [ tr [] (Group.indexedMap widgetElem model) ]
       ]
 
