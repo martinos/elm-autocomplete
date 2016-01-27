@@ -1,52 +1,23 @@
 module Main (..) where
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
 import StartApp.Simple as StartApp
-import AutoComplete exposing (..)
-import Group exposing (..)
-import Helper
-import Maybe
-
-
--- example of drop downs http://www.programmableweb.com/category/all/apis?keyword=units%20measurement
-
-
-qties =
-  [ "oz"
-  , "cup"
-  , "tea spoon"
-  , "table spoon"
-  , "unit"
-  ]
-
-
-ingredients =
-  [ "flour"
-  , "salt"
-  , "pepper"
-  , "blue berry"
-  , "banana"
-  , "potato"
-  , "apple"
-  ]
-
-
-type alias Model =
-  Group AutoComplete.Model
-
-
-model : Model
-model =
-  emptyGroup
-  |> add { defaultAutocomplete | choices = ingredients }
-  |> add { defaultAutocomplete | choices = qties }
-  |> add defaultAutocomplete
-  
+import Ingredient as Ing
+import AutoComplete
+import Group
+import Html exposing (..)
 
 
 main =
-  StartApp.start { model = model, view = view, update = update }
+  StartApp.start { model = (Group.emptyGroup |> Group.add Ing.model |> Group.add Ing.model), view = view, update = update }
+
+
+type alias Model
+  = Group.Group Ing.Model 
+
+
+type Action
+  = NoOp
+  | Update Int Ing.Action
 
 
 update : Action -> Model -> Model
@@ -55,13 +26,8 @@ update action model =
     NoOp ->
       model
 
-    Update id action ->
-      model |> Group.changeAt (AutoComplete.update action) id
-
-type Action
-  = NoOp
-  | Update Int AutoComplete.Action
-
+    Update id action' ->
+      Group.changeAt (Ing.update action') id model
 
 view : Signal.Address Action -> Model -> Html
 view address model =
@@ -69,12 +35,12 @@ view address model =
     widgetAddr id = Signal.forwardTo address (Update id)
 
     widgetElem id wid =
-      td [] [ AutoComplete.view (widgetAddr id) wid ]
+      Ing.view (widgetAddr id) wid
   in
     div
       []
       [ table
           []
-          [ tr [] (Group.indexedMap widgetElem model) ]
+          (Group.indexedMap widgetElem model)
       ]
 
