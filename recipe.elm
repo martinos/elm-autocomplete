@@ -2,16 +2,17 @@ module Main (..) where
 
 import StartApp.Simple as StartApp
 import Ingredient as Ing
-import AutoComplete
 import Group
 import Html exposing (..)
 
 
+main : Signal Html
 main =
   StartApp.start
     { model =
         Group.fromList
           [ Ing.emptyModel
+          , Ing.emptyModel
           , Ing.emptyModel
           , Ing.emptyModel
           , Ing.emptyModel
