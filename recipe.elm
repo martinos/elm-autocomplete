@@ -8,11 +8,21 @@ import Html exposing (..)
 
 
 main =
-  StartApp.start { model = (Group.emptyGroup |> Group.add Ing.model |> Group.add Ing.model), view = view, update = update }
+  StartApp.start
+    { model =
+        Group.fromList
+          [ Ing.emptyModel
+          , Ing.emptyModel
+          , Ing.emptyModel
+          , Ing.emptyModel
+          ]
+    , view = view
+    , update = update
+    }
 
 
-type alias Model
-  = Group.Group Ing.Model 
+type alias Model =
+  Group.Group Ing.Model
 
 
 type Action
@@ -27,7 +37,8 @@ update action model =
       model
 
     Update id action' ->
-      Group.changeAt (Ing.update action') id model
+      Group.changeAt id (Ing.update action') model
+
 
 view : Signal.Address Action -> Model -> Html
 view address model =
@@ -37,10 +48,7 @@ view address model =
     widgetElem id wid =
       Ing.view (widgetAddr id) wid
   in
-    div
+    table
       []
-      [ table
-          []
-          (Group.indexedMap widgetElem model)
-      ]
+      (Group.indexedMap widgetElem model)
 

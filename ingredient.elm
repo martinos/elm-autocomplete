@@ -33,8 +33,8 @@ type alias Model =
   Group AutoComplete.Model
 
 
-model : Model
-model =
+emptyModel : Model
+emptyModel =
   emptyGroup
     |> add { defaultAutocomplete | choices = ingredients }
     |> add { defaultAutocomplete | choices = qties }
@@ -48,7 +48,7 @@ update action model =
       model
 
     Update id action ->
-      model |> Group.changeAt (AutoComplete.update action) id
+      model |> Group.changeAt id (AutoComplete.update action)
 
 
 type Action

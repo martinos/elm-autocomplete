@@ -19,7 +19,8 @@ cursor (Selector id _) =
   id
 
 
-group (Selector _ group) =  group
+group (Selector _ group) =
+  group
 
 
 moveRel : (List ( ID, a ) -> List ( ID, a )) -> Selector a -> Selector a
@@ -47,9 +48,10 @@ next =
   moveRel identity
 
 
-moveAt: Maybe ID -> Selector a -> Selector a
+moveAt : Maybe ID -> Selector a -> Selector a
 moveAt id (Selector _ group) =
   Selector id group
+
 
 findNext : Maybe a -> List a -> Maybe a
 findNext cursPos list =
