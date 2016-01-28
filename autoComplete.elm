@@ -18,6 +18,7 @@ type alias Model =
   }
 
 
+defaultAutocomplete : Model
 defaultAutocomplete =
   { input = ""
   , matches = emptySelector
@@ -163,10 +164,11 @@ update action model =
         model |> updateMatches (moveAt (Just id))
 
 
+arrowToAction : number -> Action
 arrowToAction k =
   case k of
     38 ->
-      Up
+     Up
 
     40 ->
       Down
@@ -183,11 +185,12 @@ onInput : Signal.Address a -> (String -> a) -> Attribute
 onInput address f =
   on "input" targetValue (\v -> Signal.message address (f v))
 
-
+onChange : Signal.Address a -> (String -> a) -> Attribute
 onChange address f =
   on "change" targetValue (\v -> Signal.message address (f v))
 
 
+app : Signal.Mailbox Action 
 app =
   Signal.mailbox NoOp
 
@@ -205,10 +208,11 @@ initModel =
   }
 
 
+toMatch : List String
 toMatch =
   [ "ml", "once", "tasse", "cuiller a the", "cuiller a soupe" ]
 
-
+main : Signal Html
 main =
   app.signal
     |> Signal.foldp update initModel

@@ -15,7 +15,6 @@ main =
           , Ing.emptyModel
           , Ing.emptyModel
           , Ing.emptyModel
-          , Ing.emptyModel
           ]
     , view = view
     , update = update
