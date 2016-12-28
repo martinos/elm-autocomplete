@@ -4,6 +4,7 @@ import Group exposing (..)
 import ElmTest exposing (..)
 
 
+tests : Test
 tests =
   suite
     "main"
@@ -33,7 +34,6 @@ tests =
         "indexedMap"
         []
     ]
-
+    
 main =
   elementRunner tests
-
